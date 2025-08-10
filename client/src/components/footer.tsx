@@ -1,4 +1,8 @@
+import { Link, useLocation } from "wouter";
+
 export default function Footer() {
+  const [location] = useLocation();
+  
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -27,12 +31,18 @@ export default function Footer() {
               >
                 Portfolio
               </button>
-              <button 
-                onClick={() => scrollToSection('shop')}
-                className="block text-gray-300 hover:text-neon-cyan transition-colors duration-300"
-              >
-                Shop
-              </button>
+              {location === '/' ? (
+                <button 
+                  onClick={() => scrollToSection('shop')}
+                  className="block text-gray-300 hover:text-neon-cyan transition-colors duration-300"
+                >
+                  Shop
+                </button>
+              ) : (
+                <Link href="/shop" className="block text-gray-300 hover:text-neon-cyan transition-colors duration-300">
+                  Shop
+                </Link>
+              )}
               <button 
                 onClick={() => scrollToSection('about')}
                 className="block text-gray-300 hover:text-neon-cyan transition-colors duration-300"

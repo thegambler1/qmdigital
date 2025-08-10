@@ -1,10 +1,10 @@
-import Navbar from "@/components/navbar";
-import Hero from "@/components/hero";
-import Portfolio from "@/components/portfolio";
-import Shop from "@/components/shop";
-import About from "@/components/about";
-import Contact from "@/components/contact";
-import Footer from "@/components/footer";
+import Navbar from "../components/navbar";
+import Hero from "../components/hero";
+import Portfolio from "../components/portfolio";
+import ShopPreview from "../components/shop-preview";
+import About from "../components/about";
+import Contact from "../components/contact";
+import Footer from "../components/footer";
 
 export default function Home() {
   return (
@@ -13,7 +13,7 @@ export default function Home() {
       <main>
         <Hero />
         <Portfolio />
-        <Shop />
+        <ShopPreview />
         <About />
         <Contact />
       </main>
