@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertContactSchema } from "@shared/schema";
+import { insertContactSchema, insertPortfolioItemSchema, insertProductSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -93,6 +93,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(contacts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch contacts" });
+    }
+  });
+
+  // Admin Portfolio Routes
+  app.post("/api/admin/portfolio", async (req, res) => {
+    try {
+      const validatedData = insertPortfolioItemSchema.parse(req.body);
+      const item = await storage.createPortfolioItem(validatedData);
+      res.status(201).json({ message: "Portfolio item created", item });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Validation error", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create portfolio item" });
+      }
+    }
+  });
+
+  app.put("/api/admin/portfolio/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertPortfolioItemSchema.partial().parse(req.body);
+      const item = await storage.updatePortfolioItem(id, validatedData);
+      
+      if (!item) {
+        return res.status(404).json({ message: "Portfolio item not found" });
+      }
+      
+      res.json({ message: "Portfolio item updated", item });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Validation error", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update portfolio item" });
+      }
+    }
+  });
+
+  app.delete("/api/admin/portfolio/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deletePortfolioItem(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Portfolio item not found" });
+      }
+      
+      res.json({ message: "Portfolio item deleted" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete portfolio item" });
+    }
+  });
+
+  // Admin Product Routes
+  app.post("/api/admin/products", async (req, res) => {
+    try {
+      const validatedData = insertProductSchema.parse(req.body);
+      const product = await storage.createProduct(validatedData);
+      res.status(201).json({ message: "Product created", product });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Validation error", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create product" });
+      }
+    }
+  });
+
+  app.put("/api/admin/products/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertProductSchema.partial().parse(req.body);
+      const product = await storage.updateProduct(id, validatedData);
+      
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      res.json({ message: "Product updated", product });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Validation error", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update product" });
+      }
+    }
+  });
+
+  app.delete("/api/admin/products/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteProduct(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      res.json({ message: "Product deleted" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete product" });
     }
   });
 

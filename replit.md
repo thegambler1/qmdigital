@@ -1,6 +1,13 @@
 # Overview
 
-This is a full-stack web application featuring a cyberpunk-themed digital art portfolio and e-commerce platform. The application showcases a digital artist's work through an interactive portfolio gallery with filtering capabilities, an integrated shop for selling digital art products, and a contact form for client inquiries. The design emphasizes futuristic aesthetics with neon color schemes, glassmorphism effects, and cyberpunk visual elements.
+This is a full-stack web application featuring a cyberpunk-themed digital art portfolio and e-commerce platform. The application showcases a digital artist's work through an interactive portfolio gallery with filtering capabilities, a dedicated shop page for selling digital art products, contact form for client inquiries, and an admin panel for content management. The design emphasizes futuristic aesthetics with neon color schemes, glassmorphism effects, and cyberpunk visual elements.
+
+## Recent Updates (August 2025)
+
+- **Separate Shop Page**: Created dedicated `/shop` route with advanced filtering, sorting, and view modes
+- **Admin Panel**: Added `/admin` route with full CRUD operations for portfolio items and products
+- **API Extensions**: Implemented admin endpoints for content management
+- **Enhanced Navigation**: Updated routing system to handle multiple pages with proper navigation states
 
 # User Preferences
 
@@ -40,12 +47,21 @@ Preferred communication style: Simple, everyday language.
 - **TypeScript Configuration**: Unified tsconfig with strict mode and modern ES features
 
 ## API Design
-- **RESTful Endpoints**: 
+- **Public Endpoints**: 
   - `/api/portfolio` - Portfolio item management with category filtering
   - `/api/products` - Product listings with featured item support
   - `/api/contact` - Contact form submission handling
+- **Admin Endpoints**:
+  - `/api/admin/portfolio` - CRUD operations for portfolio items (POST, PUT, DELETE)
+  - `/api/admin/products` - CRUD operations for products (POST, PUT, DELETE)
 - **Error Handling**: Centralized error middleware with consistent JSON responses
 - **Request Logging**: Custom middleware for API request tracking
+
+## Pages Architecture
+- **Home (/)**: Landing page with hero, portfolio preview, shop preview, about, and contact sections
+- **Shop (/shop)**: Dedicated product catalog with filtering, sorting, and view mode options
+- **Admin (/admin)**: Content management interface with tabs for portfolio and product administration
+- **404**: Custom not-found page for handling invalid routes
 
 # External Dependencies
 

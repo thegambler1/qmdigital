@@ -6,11 +6,17 @@ export interface IStorage {
   getPortfolioItems(): Promise<PortfolioItem[]>;
   getPortfolioItemsByCategory(category: string): Promise<PortfolioItem[]>;
   getPortfolioItem(id: string): Promise<PortfolioItem | undefined>;
+  createPortfolioItem(item: InsertPortfolioItem): Promise<PortfolioItem>;
+  updatePortfolioItem(id: string, item: Partial<InsertPortfolioItem>): Promise<PortfolioItem | undefined>;
+  deletePortfolioItem(id: string): Promise<boolean>;
   
   // Product methods  
   getProducts(): Promise<Product[]>;
   getFeaturedProducts(): Promise<Product[]>;
   getProduct(id: string): Promise<Product | undefined>;
+  createProduct(product: InsertProduct): Promise<Product>;
+  updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product | undefined>;
+  deleteProduct(id: string): Promise<boolean>;
   
   // Contact methods
   createContact(contact: InsertContact): Promise<Contact>;
@@ -137,6 +143,32 @@ export class MemStorage implements IStorage {
     return this.portfolioItems.get(id);
   }
 
+  async createPortfolioItem(insertItem: InsertPortfolioItem): Promise<PortfolioItem> {
+    const id = randomUUID();
+    const item: PortfolioItem = {
+      ...insertItem,
+      id
+    };
+    this.portfolioItems.set(id, item);
+    return item;
+  }
+
+  async updatePortfolioItem(id: string, updateData: Partial<InsertPortfolioItem>): Promise<PortfolioItem | undefined> {
+    const existing = this.portfolioItems.get(id);
+    if (!existing) return undefined;
+    
+    const updated: PortfolioItem = {
+      ...existing,
+      ...updateData
+    };
+    this.portfolioItems.set(id, updated);
+    return updated;
+  }
+
+  async deletePortfolioItem(id: string): Promise<boolean> {
+    return this.portfolioItems.delete(id);
+  }
+
   async getProducts(): Promise<Product[]> {
     return Array.from(this.products.values());
   }
@@ -147,6 +179,32 @@ export class MemStorage implements IStorage {
 
   async getProduct(id: string): Promise<Product | undefined> {
     return this.products.get(id);
+  }
+
+  async createProduct(insertProduct: InsertProduct): Promise<Product> {
+    const id = randomUUID();
+    const product: Product = {
+      ...insertProduct,
+      id
+    };
+    this.products.set(id, product);
+    return product;
+  }
+
+  async updateProduct(id: string, updateData: Partial<InsertProduct>): Promise<Product | undefined> {
+    const existing = this.products.get(id);
+    if (!existing) return undefined;
+    
+    const updated: Product = {
+      ...existing,
+      ...updateData
+    };
+    this.products.set(id, updated);
+    return updated;
+  }
+
+  async deleteProduct(id: string): Promise<boolean> {
+    return this.products.delete(id);
   }
 
   async createContact(insertContact: InsertContact): Promise<Contact> {
