@@ -47,8 +47,10 @@ export default function Admin() {
       toast({ title: "Success", description: "Portfolio item created successfully" });
       setEditingPortfolioItem(null);
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to create portfolio item", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Portfolio creation error:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to create portfolio item";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
     },
   });
 
@@ -89,8 +91,10 @@ export default function Admin() {
       toast({ title: "Success", description: "Product created successfully" });
       setEditingProduct(null);
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to create product", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Product creation error:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to create product";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
     },
   });
 
@@ -103,8 +107,10 @@ export default function Admin() {
       toast({ title: "Success", description: "Product updated successfully" });
       setEditingProduct(null);
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to update product", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Product update error:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to update product";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
     },
   });
 
@@ -148,10 +154,18 @@ export default function Admin() {
       return;
     }
 
+    // Ensure featured is a boolean
+    const productData = {
+      ...data,
+      featured: data.featured || false
+    } as InsertProduct;
+
+    console.log('Saving product:', productData);
+
     if (id) {
-      updateProductMutation.mutate({ id, data: data as InsertProduct });
+      updateProductMutation.mutate({ id, data: productData });
     } else {
-      createProductMutation.mutate(data as InsertProduct);
+      createProductMutation.mutate(productData);
     }
   };
 
