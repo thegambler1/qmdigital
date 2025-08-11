@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { getStorage } from "./storage";
 import { insertContactSchema, insertPortfolioItemSchema, insertProductSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -12,6 +12,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { category } = req.query;
       let portfolioItems;
       
+      const storage = getStorage();
       if (category && category !== 'All') {
         portfolioItems = await storage.getPortfolioItemsByCategory(category as string);
       } else {
@@ -27,6 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/portfolio/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      const storage = getStorage();
       const portfolioItem = await storage.getPortfolioItem(id);
       
       if (!portfolioItem) {
@@ -45,6 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { featured } = req.query;
       let products;
       
+      const storage = getStorage();
       if (featured === 'true') {
         products = await storage.getFeaturedProducts();
       } else {
@@ -60,6 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/products/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      const storage = getStorage();
       const product = await storage.getProduct(id);
       
       if (!product) {
@@ -76,6 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/contact", async (req, res) => {
     try {
       const validatedData = insertContactSchema.parse(req.body);
+      const storage = getStorage();
       const contact = await storage.createContact(validatedData);
       res.status(201).json({ message: "Contact form submitted successfully", contact });
     } catch (error) {
@@ -89,6 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/contacts", async (req, res) => {
     try {
+      const storage = getStorage();
       const contacts = await storage.getContacts();
       res.json(contacts);
     } catch (error) {
@@ -100,6 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/portfolio", async (req, res) => {
     try {
       const validatedData = insertPortfolioItemSchema.parse(req.body);
+      const storage = getStorage();
       const item = await storage.createPortfolioItem(validatedData);
       res.status(201).json({ message: "Portfolio item created", item });
     } catch (error) {
@@ -115,6 +122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const validatedData = insertPortfolioItemSchema.partial().parse(req.body);
+      const storage = getStorage();
       const item = await storage.updatePortfolioItem(id, validatedData);
       
       if (!item) {
@@ -134,6 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/admin/portfolio/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      const storage = getStorage();
       const deleted = await storage.deletePortfolioItem(id);
       
       if (!deleted) {
@@ -150,6 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/products", async (req, res) => {
     try {
       const validatedData = insertProductSchema.parse(req.body);
+      const storage = getStorage();
       const product = await storage.createProduct(validatedData);
       res.status(201).json({ message: "Product created", product });
     } catch (error) {
@@ -165,6 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const validatedData = insertProductSchema.partial().parse(req.body);
+      const storage = getStorage();
       const product = await storage.updateProduct(id, validatedData);
       
       if (!product) {
@@ -184,6 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/admin/products/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      const storage = getStorage();
       const deleted = await storage.deleteProduct(id);
       
       if (!deleted) {

@@ -1,5 +1,7 @@
-import { type PortfolioItem, type InsertPortfolioItem, type Product, type InsertProduct, type Contact, type InsertContact } from "@shared/schema";
+import { type PortfolioItem, type InsertPortfolioItem, type Product, type InsertProduct, type Contact, type InsertContact, portfolioItems, products, contacts } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Portfolio methods
@@ -223,4 +225,109 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database Storage Implementation
+export class DatabaseStorage implements IStorage {
+  async getPortfolioItems(): Promise<PortfolioItem[]> {
+    return await db.select().from(portfolioItems);
+  }
+
+  async getPortfolioItemsByCategory(category: string): Promise<PortfolioItem[]> {
+    return await db.select().from(portfolioItems).where(eq(portfolioItems.category, category));
+  }
+
+  async getPortfolioItem(id: string): Promise<PortfolioItem | undefined> {
+    const result = await db.select().from(portfolioItems).where(eq(portfolioItems.id, id));
+    return result[0];
+  }
+
+  async createPortfolioItem(insertItem: InsertPortfolioItem): Promise<PortfolioItem> {
+    const result = await db.insert(portfolioItems).values(insertItem).returning();
+    return result[0];
+  }
+
+  async updatePortfolioItem(id: string, updateData: Partial<InsertPortfolioItem>): Promise<PortfolioItem | undefined> {
+    const result = await db.update(portfolioItems)
+      .set(updateData)
+      .where(eq(portfolioItems.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deletePortfolioItem(id: string): Promise<boolean> {
+    const result = await db.delete(portfolioItems).where(eq(portfolioItems.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getProducts(): Promise<Product[]> {
+    return await db.select().from(products);
+  }
+
+  async getFeaturedProducts(): Promise<Product[]> {
+    return await db.select().from(products).where(eq(products.featured, true));
+  }
+
+  async getProduct(id: string): Promise<Product | undefined> {
+    const result = await db.select().from(products).where(eq(products.id, id));
+    return result[0];
+  }
+
+  async createProduct(insertProduct: InsertProduct): Promise<Product> {
+    const result = await db.insert(products).values(insertProduct).returning();
+    return result[0];
+  }
+
+  async updateProduct(id: string, updateData: Partial<InsertProduct>): Promise<Product | undefined> {
+    const result = await db.update(products)
+      .set(updateData)
+      .where(eq(products.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteProduct(id: string): Promise<boolean> {
+    const result = await db.delete(products).where(eq(products.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async createContact(insertContact: InsertContact): Promise<Contact> {
+    const result = await db.insert(contacts).values(insertContact).returning();
+    return result[0];
+  }
+
+  async getContacts(): Promise<Contact[]> {
+    return await db.select().from(contacts);
+  }
+}
+
+// Create storage instance
+let storage: IStorage;
+
+// Try to create database storage, fall back to memory storage if it fails
+async function createStorage(): Promise<IStorage> {
+  if (process.env.DATABASE_URL) {
+    try {
+      // Test database connection by creating an instance
+      const dbStorage = new DatabaseStorage();
+      // Try a simple query to test the connection
+      await db.select().from(portfolioItems).limit(1);
+      console.log("Database connection successful, using DatabaseStorage");
+      return dbStorage;
+    } catch (error) {
+      console.log("Database connection failed, falling back to MemStorage:", error);
+    }
+  }
+  
+  console.log("Using in-memory storage");
+  return new MemStorage();
+}
+
+// Initialize storage with fallback
+export let storageInstance: IStorage = new MemStorage();
+
+// Function to initialize storage
+export async function initializeStorage(): Promise<void> {
+  storageInstance = await createStorage();
+}
+
+// Export storage getter
+export const getStorage = (): IStorage => storageInstance;
