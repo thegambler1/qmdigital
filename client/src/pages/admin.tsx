@@ -27,10 +27,22 @@ export default function Admin() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState<'portfolio' | 'products' | 'settings'>('portfolio');
   const [editingPortfolioItem, setEditingPortfolioItem] = useState<EditingPortfolioItem | null>(null);
   const [editingProduct, setEditingProduct] = useState<EditingProduct | null>(null);
   const [editingSettings, setEditingSettings] = useState<EditingSettings | null>(null);
+
+  const handleLogin = () => {
+    // Simple password check - in production, this should be server-side
+    if (password === 'admin123') {
+      setIsAuthenticated(true);
+      toast({ title: "Access Granted", description: "Welcome to the admin panel!" });
+    } else {
+      toast({ title: "Access Denied", description: "Incorrect password", variant: "destructive" });
+    }
+  };
 
   // Fetch portfolio items
   const { data: portfolioItems } = useQuery<PortfolioItem[]>({
@@ -227,18 +239,82 @@ export default function Admin() {
     }
   };
 
+  // Show login form if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="bg-cyber-dark text-white min-h-screen">
+        <Navbar />
+        <main className="pt-24">
+          <div className="container mx-auto px-6 py-12">
+            <div className="max-w-md mx-auto">
+              <div className="text-center mb-8">
+                <h1 className="text-4xl font-cyber font-bold mb-4">
+                  <span className="text-neon-cyan">ADMIN</span> <span className="text-white">ACCESS</span>
+                </h1>
+                <p className="text-xl text-gray-300">
+                  Enter password to continue
+                </p>
+              </div>
+
+              <div className="glassmorphism rounded-xl p-8">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Password
+                    </label>
+                    <Input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                      className="bg-gray-800 border-gray-600 text-white"
+                      placeholder="Enter admin password"
+                      autoFocus
+                    />
+                  </div>
+                  <Button
+                    onClick={handleLogin}
+                    className="w-full bg-neon-cyan hover:bg-cyan-400 text-cyber-dark font-semibold"
+                  >
+                    Access Admin Panel
+                  </Button>
+                  <p className="text-sm text-gray-400 text-center mt-4">
+                    Default password: <span className="text-neon-cyan font-mono">admin123</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-cyber-dark text-white min-h-screen">
       <Navbar />
       <main className="pt-24">
         <div className="container mx-auto px-6 py-12">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-cyber font-bold mb-4">
-              <span className="text-neon-cyan">ADMIN</span> <span className="text-white">PANEL</span>
-            </h1>
-            <p className="text-xl text-gray-300">
-              Manage your portfolio items and products
-            </p>
+            <div className="flex justify-between items-center">
+              <div></div>
+              <div>
+                <h1 className="text-4xl md:text-5xl font-cyber font-bold mb-4">
+                  <span className="text-neon-cyan">ADMIN</span> <span className="text-white">PANEL</span>
+                </h1>
+                <p className="text-xl text-gray-300">
+                  Manage your portfolio items and products
+                </p>
+              </div>
+              <Button
+                onClick={() => setIsAuthenticated(false)}
+                variant="outline"
+                className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
+              >
+                Logout
+              </Button>
+            </div>
           </div>
 
           {/* Tabs */}

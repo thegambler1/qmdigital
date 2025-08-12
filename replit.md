@@ -4,6 +4,9 @@ This is a full-stack web application featuring a cyberpunk-themed digital art po
 
 ## Recent Updates (August 2025)
 
+- **Password Protection**: Added authentication to admin panel with password "admin123"
+- **Site Settings Management**: Comprehensive settings tab for customizing all site content
+- **Admin Security**: Login/logout functionality with secure access control
 - **Separate Shop Page**: Created dedicated `/shop` route with advanced filtering, sorting, and view modes
 - **Admin Panel**: Added `/admin` route with full CRUD operations for portfolio items and products
 - **API Extensions**: Implemented admin endpoints for content management
