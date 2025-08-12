@@ -4,6 +4,8 @@ This is a full-stack web application featuring a cyberpunk-themed digital art po
 
 ## Recent Updates (August 2025)
 
+- **Vercel Deployment**: Added complete Vercel deployment configuration with vercel.json and guides
+- **Database Flexibility**: Automatic fallback from database to in-memory storage for development
 - **Password Protection**: Added authentication to admin panel with password "admin123"
 - **Site Settings Management**: Comprehensive settings tab for customizing all site content
 - **Admin Security**: Login/logout functionality with secure access control
