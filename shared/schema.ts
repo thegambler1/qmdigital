@@ -33,6 +33,22 @@ export const contacts = pgTable("contacts", {
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const siteSettings = pgTable("site_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  siteName: text("site_name").notNull(),
+  tagline: text("tagline").notNull(),
+  aboutTitle: text("about_title").notNull(),
+  aboutDescription: text("about_description").notNull(),
+  heroTitle: text("hero_title").notNull(),
+  heroSubtitle: text("hero_subtitle").notNull(),
+  contactEmail: text("contact_email").notNull(),
+  socialLinks: text("social_links").notNull(), // JSON string
+  metaDescription: text("meta_description").notNull(),
+  faviconUrl: text("favicon_url"),
+  logoUrl: text("logo_url"),
+  updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 export const insertPortfolioItemSchema = createInsertSchema(portfolioItems).omit({
   id: true,
 });
@@ -46,6 +62,11 @@ export const insertContactSchema = createInsertSchema(contacts).omit({
   createdAt: true,
 });
 
+export const insertSiteSettingsSchema = createInsertSchema(siteSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
 export type InsertPortfolioItem = z.infer<typeof insertPortfolioItemSchema>;
 export type PortfolioItem = typeof portfolioItems.$inferSelect;
 
@@ -54,3 +75,6 @@ export type Product = typeof products.$inferSelect;
 
 export type InsertContact = z.infer<typeof insertContactSchema>;
 export type Contact = typeof contacts.$inferSelect;
+
+export type InsertSiteSettings = z.infer<typeof insertSiteSettingsSchema>;
+export type SiteSettings = typeof siteSettings.$inferSelect;

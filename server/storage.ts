@@ -1,4 +1,4 @@
-import { type PortfolioItem, type InsertPortfolioItem, type Product, type InsertProduct, type Contact, type InsertContact, portfolioItems, products, contacts } from "@shared/schema";
+import { type PortfolioItem, type InsertPortfolioItem, type Product, type InsertProduct, type Contact, type InsertContact, type SiteSettings, type InsertSiteSettings, portfolioItems, products, contacts, siteSettings } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -23,23 +23,51 @@ export interface IStorage {
   // Contact methods
   createContact(contact: InsertContact): Promise<Contact>;
   getContacts(): Promise<Contact[]>;
+  
+  // Site settings methods
+  getSiteSettings(): Promise<SiteSettings | undefined>;
+  updateSiteSettings(settings: Partial<InsertSiteSettings>): Promise<SiteSettings>;
 }
 
 export class MemStorage implements IStorage {
   private portfolioItems: Map<string, PortfolioItem>;
   private products: Map<string, Product>;
   private contacts: Map<string, Contact>;
+  private siteSettings: SiteSettings | undefined;
 
   constructor() {
     this.portfolioItems = new Map();
     this.products = new Map();
     this.contacts = new Map();
+    this.siteSettings = undefined;
     
     // Initialize with sample data
     this.initializeData();
   }
 
   private initializeData() {
+    // Initialize site settings
+    this.siteSettings = {
+      id: randomUUID(),
+      siteName: "CyberDesign Studio",
+      tagline: "Future-Focused Digital Art",
+      aboutTitle: "About the Artist",
+      aboutDescription: "I'm a passionate digital artist specializing in cyberpunk and futuristic designs. With over 5 years of experience in graphic design, UI/UX, and 3D art, I create visually stunning pieces that push the boundaries of digital creativity. My work combines cutting-edge technology with artistic vision to deliver unique, high-quality designs for clients worldwide.",
+      heroTitle: "Digital Artist & Designer",
+      heroSubtitle: "Creating the future, one pixel at a time",
+      contactEmail: "hello@cyberdesign.studio",
+      socialLinks: JSON.stringify({
+        twitter: "https://twitter.com/cyberdesignstudio",
+        instagram: "https://instagram.com/cyberdesignstudio", 
+        dribbble: "https://dribbble.com/cyberdesignstudio",
+        behance: "https://behance.net/cyberdesignstudio"
+      }),
+      metaDescription: "Professional digital artist specializing in cyberpunk, futuristic designs, UI/UX, and 3D art. Explore premium digital art collections and custom design services.",
+      faviconUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32",
+      logoUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=60",
+      updatedAt: new Date().toISOString()
+    };
+  
     // Sample portfolio items
     const portfolioData: Omit<PortfolioItem, 'id'>[] = [
       {
@@ -222,6 +250,38 @@ export class MemStorage implements IStorage {
 
   async getContacts(): Promise<Contact[]> {
     return Array.from(this.contacts.values());
+  }
+
+  // Site settings methods
+  async getSiteSettings(): Promise<SiteSettings | undefined> {
+    return this.siteSettings;
+  }
+
+  async updateSiteSettings(settings: Partial<InsertSiteSettings>): Promise<SiteSettings> {
+    if (!this.siteSettings) {
+      this.siteSettings = {
+        id: randomUUID(),
+        siteName: settings.siteName || "Portfolio",
+        tagline: settings.tagline || "Digital Art & Design",
+        aboutTitle: settings.aboutTitle || "About",
+        aboutDescription: settings.aboutDescription || "Artist description",
+        heroTitle: settings.heroTitle || "Artist & Designer",
+        heroSubtitle: settings.heroSubtitle || "Creating beautiful designs",
+        contactEmail: settings.contactEmail || "hello@example.com",
+        socialLinks: settings.socialLinks || "{}",
+        metaDescription: settings.metaDescription || "Portfolio website",
+        faviconUrl: settings.faviconUrl || null,
+        logoUrl: settings.logoUrl || null,
+        updatedAt: new Date().toISOString()
+      };
+    } else {
+      this.siteSettings = {
+        ...this.siteSettings,
+        ...settings,
+        updatedAt: new Date().toISOString()
+      };
+    }
+    return this.siteSettings;
   }
 }
 

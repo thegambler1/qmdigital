@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Save, X } from "lucide-react";
-import type { PortfolioItem, Product, InsertPortfolioItem, InsertProduct } from "@shared/schema";
+import { Plus, Edit, Trash2, Save, X, Settings } from "lucide-react";
+import type { PortfolioItem, Product, InsertPortfolioItem, InsertProduct, SiteSettings, InsertSiteSettings } from "@shared/schema";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import { Button } from "@/components/ui/button";
@@ -19,13 +19,18 @@ interface EditingProduct extends Partial<InsertProduct> {
   id?: string;
 }
 
+interface EditingSettings extends Partial<InsertSiteSettings> {
+  socialLinks?: string;
+}
+
 export default function Admin() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const [activeTab, setActiveTab] = useState<'portfolio' | 'products'>('portfolio');
+  const [activeTab, setActiveTab] = useState<'portfolio' | 'products' | 'settings'>('portfolio');
   const [editingPortfolioItem, setEditingPortfolioItem] = useState<EditingPortfolioItem | null>(null);
   const [editingProduct, setEditingProduct] = useState<EditingProduct | null>(null);
+  const [editingSettings, setEditingSettings] = useState<EditingSettings | null>(null);
 
   // Fetch portfolio items
   const { data: portfolioItems } = useQuery<PortfolioItem[]>({
@@ -35,6 +40,11 @@ export default function Admin() {
   // Fetch products
   const { data: products } = useQuery<Product[]>({
     queryKey: ['/api/products'],
+  });
+
+  // Fetch site settings
+  const { data: siteSettings } = useQuery<SiteSettings>({
+    queryKey: ['/api/settings'],
   });
 
   // Portfolio mutations
@@ -127,6 +137,21 @@ export default function Admin() {
     },
   });
 
+  // Settings mutations
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (data: Partial<InsertSiteSettings>) => {
+      return apiRequest('/api/admin/settings', 'PUT', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
+      toast({ title: "Success", description: "Site settings updated successfully" });
+      setEditingSettings(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update site settings", variant: "destructive" });
+    },
+  });
+
   const handleSavePortfolioItem = () => {
     if (!editingPortfolioItem) return;
 
@@ -169,6 +194,39 @@ export default function Admin() {
     }
   };
 
+  const handleSaveSettings = () => {
+    if (!editingSettings) return;
+    
+    updateSettingsMutation.mutate(editingSettings);
+  };
+
+  const handleEditSettings = () => {
+    if (siteSettings) {
+      const socialLinks = siteSettings.socialLinks ? 
+        JSON.stringify(JSON.parse(siteSettings.socialLinks), null, 2) : 
+        JSON.stringify({}, null, 2);
+      
+      setEditingSettings({
+        ...siteSettings,
+        socialLinks
+      });
+    } else {
+      setEditingSettings({
+        siteName: '',
+        tagline: '',
+        aboutTitle: '',
+        aboutDescription: '',
+        heroTitle: '',
+        heroSubtitle: '',
+        contactEmail: '',
+        socialLinks: JSON.stringify({}, null, 2),
+        metaDescription: '',
+        faviconUrl: '',
+        logoUrl: ''
+      });
+    }
+  };
+
   return (
     <div className="bg-cyber-dark text-white min-h-screen">
       <Navbar />
@@ -200,6 +258,14 @@ export default function Admin() {
                   className={activeTab === 'products' ? 'bg-neon-cyan text-cyber-dark' : 'text-gray-300 hover:text-white'}
                 >
                   Products
+                </Button>
+                <Button
+                  variant={activeTab === 'settings' ? 'default' : 'ghost'}
+                  onClick={() => setActiveTab('settings')}
+                  className={activeTab === 'settings' ? 'bg-neon-cyan text-cyber-dark' : 'text-gray-300 hover:text-white'}
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
                 </Button>
               </div>
             </div>
@@ -513,6 +579,208 @@ export default function Admin() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Settings Tab */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-white">Site Settings</h2>
+                <Button 
+                  onClick={handleEditSettings}
+                  className="bg-neon-cyan hover:bg-cyan-400 text-cyber-dark font-semibold"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Settings
+                </Button>
+              </div>
+
+              {editingSettings ? (
+                <div className="glassmorphism rounded-xl p-6 space-y-4">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-semibold text-white">Edit Site Settings</h3>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleSaveSettings}
+                        className="bg-green-500 hover:bg-green-600 text-white"
+                        disabled={updateSettingsMutation.isPending}
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        Save
+                      </Button>
+                      <Button
+                        onClick={() => setEditingSettings(null)}
+                        variant="destructive"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Site Name</label>
+                      <Input
+                        type="text"
+                        value={editingSettings.siteName || ''}
+                        onChange={(e) => setEditingSettings({...editingSettings, siteName: e.target.value})}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        placeholder="Your Studio Name"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Tagline</label>
+                      <Input
+                        type="text"
+                        value={editingSettings.tagline || ''}
+                        onChange={(e) => setEditingSettings({...editingSettings, tagline: e.target.value})}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        placeholder="Your creative tagline"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Hero Title</label>
+                      <Input
+                        type="text"
+                        value={editingSettings.heroTitle || ''}
+                        onChange={(e) => setEditingSettings({...editingSettings, heroTitle: e.target.value})}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        placeholder="Digital Artist & Designer"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Hero Subtitle</label>
+                      <Input
+                        type="text"
+                        value={editingSettings.heroSubtitle || ''}
+                        onChange={(e) => setEditingSettings({...editingSettings, heroSubtitle: e.target.value})}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        placeholder="Creating the future, one pixel at a time"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">About Title</label>
+                      <Input
+                        type="text"
+                        value={editingSettings.aboutTitle || ''}
+                        onChange={(e) => setEditingSettings({...editingSettings, aboutTitle: e.target.value})}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        placeholder="About the Artist"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Contact Email</label>
+                      <Input
+                        type="email"
+                        value={editingSettings.contactEmail || ''}
+                        onChange={(e) => setEditingSettings({...editingSettings, contactEmail: e.target.value})}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        placeholder="hello@yoursite.com"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Favicon URL</label>
+                      <Input
+                        type="url"
+                        value={editingSettings.faviconUrl || ''}
+                        onChange={(e) => setEditingSettings({...editingSettings, faviconUrl: e.target.value})}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        placeholder="https://example.com/favicon.ico"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Logo URL</label>
+                      <Input
+                        type="url"
+                        value={editingSettings.logoUrl || ''}
+                        onChange={(e) => setEditingSettings({...editingSettings, logoUrl: e.target.value})}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        placeholder="https://example.com/logo.png"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">About Description</label>
+                    <Textarea
+                      value={editingSettings.aboutDescription || ''}
+                      onChange={(e) => setEditingSettings({...editingSettings, aboutDescription: e.target.value})}
+                      className="bg-gray-800 border-gray-600 text-white min-h-[120px]"
+                      placeholder="Tell visitors about yourself, your experience, and your artistic vision..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Meta Description</label>
+                    <Textarea
+                      value={editingSettings.metaDescription || ''}
+                      onChange={(e) => setEditingSettings({...editingSettings, metaDescription: e.target.value})}
+                      className="bg-gray-800 border-gray-600 text-white"
+                      placeholder="SEO description for search engines..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Social Links (JSON)</label>
+                    <Textarea
+                      value={editingSettings.socialLinks || ''}
+                      onChange={(e) => setEditingSettings({...editingSettings, socialLinks: e.target.value})}
+                      className="bg-gray-800 border-gray-600 text-white font-mono text-sm min-h-[120px]"
+                      placeholder={`{
+  "twitter": "https://twitter.com/username",
+  "instagram": "https://instagram.com/username",
+  "dribbble": "https://dribbble.com/username",
+  "behance": "https://behance.net/username"
+}`}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {siteSettings ? (
+                    <div className="glassmorphism rounded-xl p-6 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="font-medium text-neon-cyan mb-2">Site Name</h4>
+                          <p className="text-gray-300">{siteSettings.siteName}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-neon-cyan mb-2">Tagline</h4>
+                          <p className="text-gray-300">{siteSettings.tagline}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-neon-cyan mb-2">Hero Title</h4>
+                          <p className="text-gray-300">{siteSettings.heroTitle}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-neon-cyan mb-2">Contact Email</h4>
+                          <p className="text-gray-300">{siteSettings.contactEmail}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-neon-cyan mb-2">About Description</h4>
+                        <p className="text-gray-300 text-sm">{siteSettings.aboutDescription}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="glassmorphism rounded-xl p-6 text-center">
+                      <p className="text-gray-400 mb-4">No site settings configured yet</p>
+                      <Button onClick={handleEditSettings} className="bg-neon-cyan hover:bg-cyan-400 text-cyber-dark">
+                        Create Settings
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

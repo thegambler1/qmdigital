@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { getStorage } from "./storage";
-import { insertContactSchema, insertPortfolioItemSchema, insertProductSchema } from "@shared/schema";
+import { insertContactSchema, insertPortfolioItemSchema, insertProductSchema, insertSiteSettingsSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -205,6 +205,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Product deleted" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete product" });
+    }
+  });
+
+  // Site settings routes
+  app.get("/api/settings", async (req, res) => {
+    try {
+      const storage = getStorage();
+      const settings = await storage.getSiteSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch site settings" });
+    }
+  });
+
+  app.put("/api/admin/settings", async (req, res) => {
+    try {
+      const validatedData = insertSiteSettingsSchema.partial().parse(req.body);
+      const storage = getStorage();
+      const settings = await storage.updateSiteSettings(validatedData);
+      res.json({ message: "Site settings updated", settings });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Validation error", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update site settings" });
+      }
     }
   });
 
